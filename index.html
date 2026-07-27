@@ -580,7 +580,7 @@ function verifyLock(){
   showEmpBadge(val);
   const ls=document.getElementById('lockScreen');
   ls.style.opacity='0';ls.style.transition='opacity .3s';
-  setTimeout(()=>ls.remove(),320);
+  setTimeout(()=>{ls.remove();showHome();},320);
 }
 function logout(){
   if(!confirm('确认退出登录？'))return;
@@ -594,6 +594,7 @@ function initLock(){
     if(saved&&localStorage.getItem('pkg_employee')==='1'){
       document.getElementById('lockScreen').remove();
       showEmpBadge(saved);
+      /* init 会在 initLock() 返回后立即执行 showHome()，这里无需重复调用 */
       return;
     }
   }catch(e){}
