@@ -35,6 +35,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
 .brand-tag{font-size:8px;color:var(--t3);letter-spacing:2px;text-transform:uppercase}
 .hdr-sep{flex:1}
 .clock{font-size:11px;color:var(--t2);font-family:monospace;background:rgba(128,128,128,.07);border:1px solid var(--border);border-radius:6px;padding:3px 9px;white-space:nowrap}
+#clock{position:fixed;bottom:12px;left:12px;z-index:100;pointer-events:none}
 .hdr-btn{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:7px;border:none;cursor:pointer;font-size:11.5px;font-weight:600;transition:all .16s;font-family:inherit}
 .btn-ico{padding:5px 8px;font-size:13px}
 .btn-out{background:rgba(128,128,128,.08);color:var(--t2);border:1px solid var(--border)}
@@ -202,7 +203,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
     <div class="brand-tag">Department Dashboard</div>
   </div>
   <div class="hdr-sep"></div>
-  <div class="clock" id="clock">--:--:--</div>
   <div class="sep"></div>
   <div id="empBadge" class="clock" style="display:none;background:rgba(91,143,249,.1);border-color:rgba(91,143,249,.25);color:#a5beff;cursor:pointer" title="点击退出重新登录" onclick="logout()">👤 <span id="empId"></span></div>
   <div class="sep" id="empSep" style="display:none"></div>
@@ -283,6 +283,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
   </div>
 </div>
 <div class="toasts" id="toasts"></div>
+<div class="clock" id="clock">--:--</div>
 
 <script>
 const EMOJIS=['📦','📋','📊','📈','📉','🏭','⚙️','🔧','🛠️','📌','🗂️','📁','🖥️','💻','🌐','🔗','🔍','✅','⚠️','🚀','💡','🎯','🏆','👥','💼','🔔','📢','🛡️','⭐','🔑','🔄','🧪','⚡','💎','🌟','📐','🧩','🔎','📣','🏠'];
@@ -312,7 +313,7 @@ function saveSec(){try{localStorage.setItem('pkg_sec_v1',JSON.stringify(sections
 function getOrderedSecs(){const d=[...sections];[...new Set(modules.map(m=>m.category||'其他'))].forEach(c=>{if(!d.includes(c))d.push(c)});return d}
 
 /* clock */
-function tick(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleDateString('zh-CN')+'  '+n.toLocaleTimeString('zh-CN',{hour12:false})}
+function tick(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleDateString('zh-CN')+'  '+n.toLocaleTimeString('zh-CN',{hour12:false,hour:'2-digit',minute:'2-digit'})}
 setInterval(tick,1000);tick();
 
 /* nav render */
