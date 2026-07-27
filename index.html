@@ -185,10 +185,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
 
 <div class="lock-screen" id="lockScreen">
   <div class="lock-box">
-    <span class="lock-icon">🔒</span>
+    <span class="lock-icon">👤</span>
     <div class="lock-brand">Packaging Portal</div>
-    <div class="lock-sub">Department Access</div>
-    <input class="lock-input" id="lockPwd" type="password" placeholder="请输入访问密码" autocomplete="current-password" maxlength="32">
+    <div class="lock-sub">请输入员工号登录</div>
+    <input class="lock-input" id="lockPwd" type="text" placeholder="例如 M292447" autocomplete="off" maxlength="20" style="letter-spacing:2px;text-transform:uppercase">
     <button class="lock-btn" onclick="verifyLock()">进入</button>
     <div class="lock-err" id="lockErr"></div>
   </div>
@@ -204,6 +204,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
   <div class="hdr-sep"></div>
   <div class="clock" id="clock">--:--:--</div>
   <div class="sep"></div>
+  <div id="empBadge" class="clock" style="display:none;background:rgba(91,143,249,.1);border-color:rgba(91,143,249,.25);color:#a5beff;cursor:pointer" title="点击退出重新登录" onclick="logout()">👤 <span id="empId"></span></div>
+  <div class="sep" id="empSep" style="display:none"></div>
   <button class="hdr-btn btn-out btn-ico" id="themeBtn" onclick="toggleTheme()" title="日夜模式">🌙</button>
   <button class="hdr-btn btn-out" onclick="showHome()">🏠 主页</button>
   <button class="hdr-btn btn-solid" onclick="openModal()">＋ 添加模块</button>
@@ -560,29 +562,40 @@ document.getElementById('modal').addEventListener('click',e=>{if(e.target===docu
 ['fName','fUrl','fCat'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addModule()}));
 
 /* ── Lock screen ── */
-const LOCK_HASH='71669691cb0b0f1bf662939c0db0782fb1a71b103bba2564051bb58bf0e303e6';
-async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function verifyLock(){
-  const val=document.getElementById('lockPwd').value;
-  if(!val)return;
-  const h=await sha256(val);
-  if(h===LOCK_HASH){
-    try{sessionStorage.setItem('pkg_auth','1')}catch(e){}
-    const ls=document.getElementById('lockScreen');
-    ls.style.opacity='0';ls.style.transition='opacity .3s';
-    setTimeout(()=>ls.remove(),320);
-  }else{
+function showEmpBadge(id){
+  document.getElementById('empId').textContent=id;
+  document.getElementById('empBadge').style.display='flex';
+  document.getElementById('empSep').style.display='block';
+}
+function verifyLock(){
+  const val=document.getElementById('lockPwd').value.trim().toUpperCase();
+  if(!val){
     const inp=document.getElementById('lockPwd');
-    document.getElementById('lockErr').textContent='密码错误，请重试';
-    inp.classList.remove('shake');
-    void inp.offsetWidth;
-    inp.classList.add('shake');
-    inp.value='';
+    document.getElementById('lockErr').textContent='员工号不能为空';
+    inp.classList.remove('shake');void inp.offsetWidth;inp.classList.add('shake');
+    return;
   }
+  try{localStorage.setItem('pkg_employee','1');localStorage.setItem('pkg_emp_id',val)}catch(e){}
+  showEmpBadge(val);
+  const ls=document.getElementById('lockScreen');
+  ls.style.opacity='0';ls.style.transition='opacity .3s';
+  setTimeout(()=>ls.remove(),320);
+}
+function logout(){
+  if(!confirm('确认退出登录？'))return;
+  try{localStorage.removeItem('pkg_employee');localStorage.removeItem('pkg_emp_id')}catch(e){}
+  location.reload();
 }
 document.getElementById('lockPwd').addEventListener('keydown',e=>{if(e.key==='Enter')verifyLock()});
 function initLock(){
-  try{if(sessionStorage.getItem('pkg_auth')==='1'){document.getElementById('lockScreen').remove();return}}catch(e){}
+  try{
+    const saved=localStorage.getItem('pkg_emp_id');
+    if(saved&&localStorage.getItem('pkg_employee')==='1'){
+      document.getElementById('lockScreen').remove();
+      showEmpBadge(saved);
+      return;
+    }
+  }catch(e){}
   document.getElementById('lockScreen').style.display='flex';
   setTimeout(()=>document.getElementById('lockPwd')?.focus(),100);
 }
