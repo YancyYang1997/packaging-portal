@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Packaging · Department Portal</title>
+<script>try{if(localStorage.getItem('pkg_theme')==='light')document.write('<style>body{background:#f4f6fb!important;color:#1a1d2e!important}</style>')}catch(e){}</script>
+<style>
+:root{
+  --bg0:#0d0f1a;--bg1:#141728;--bg2:#1b1f35;--bg3:#222640;
+  --accent:#5b8ff9;--accent2:#7c3aed;--green:#10b981;--amber:#f59e0b;--red:#ef4444;
+  --t1:#e8edf8;--t2:#8892b0;--t3:#4a5470;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --shadow:0 20px 60px rgba(0,0,0,0.5);--radius:12px;--sidebar:210px;
+}
+body.light{
+  --bg0:#f4f6fb;--bg1:#ffffff;--bg2:#edf0f8;--bg3:#e2e6f2;
+  --accent:#4475e8;--accent2:#6d28d9;--amber:#d97706;--red:#dc2626;
+  --t1:#1a1d2e;--t2:#50597a;--t3:#8490a8;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.13);
+  --shadow:0 20px 60px rgba(0,0,0,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var(--t1);height:100vh;overflow:hidden;display:flex;flex-direction:column;transition:background .25s,color .25s}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(128,128,128,.18);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:rgba(128,128,128,.3)}
+
+/* ── Header ── */
+.hdr{height:52px;flex-shrink:0;background:linear-gradient(135deg,var(--bg1),var(--bg2));border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:8px;position:relative;z-index:50}
+.hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(91,143,249,.4),rgba(124,58,237,.3),transparent)}
+.logo-box{width:31px;height:31px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;box-shadow:0 3px 10px rgba(91,143,249,.3)}
+.brand-name{font-size:14px;font-weight:700;background:linear-gradient(135deg,#a5beff,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.brand-tag{font-size:8px;color:var(--t3);letter-spacing:2px;text-transform:uppercase}
+.hdr-sep{flex:1}
+.clock{font-size:11px;color:var(--t2);font-family:monospace;background:rgba(128,128,128,.07);border:1px solid var(--border);border-radius:6px;padding:3px 9px;white-space:nowrap}
+.hdr-btn{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:7px;border:none;cursor:pointer;font-size:11.5px;font-weight:600;transition:all .16s;font-family:inherit}
+.btn-ico{padding:5px 8px;font-size:13px}
+.btn-out{background:rgba(128,128,128,.08);color:var(--t2);border:1px solid var(--border)}
+.btn-out:hover{background:rgba(128,128,128,.14);color:var(--t1)}
+.btn-solid{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 3px 10px rgba(91,143,249,.25)}
+.btn-solid:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 5px 16px rgba(91,143,249,.35)}
+.sep{width:1px;height:16px;background:var(--border);flex-shrink:0}
+
+/* ── Layout ── */
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .24s ease,opacity .24s ease}
+.sidebar.collapsed{width:0;opacity:0}
+.sb-search{padding:8px 8px 4px}
+.sb-input{width:100%;background:rgba(128,128,128,.07);border:1px solid var(--border);border-radius:7px;padding:5px 10px;color:var(--t1);font-size:11.5px;outline:none;transition:border-color .18s;font-family:inherit}
+.sb-input::placeholder{color:var(--t3)}
+.sb-input:focus{border-color:rgba(91,143,249,.45)}
+.sb-nav{flex:1;overflow-y:auto;padding:3px 5px 8px}
+
+/* nav items */
+.sb-item{display:flex;align-items:center;gap:7px;padding:6px 7px;border-radius:7px;cursor:pointer;color:var(--t2);font-size:12px;transition:all .12s;position:relative;user-select:none;margin-bottom:1px}
+.sb-item:hover{background:rgba(128,128,128,.06);color:var(--t1)}
+.sb-item.active{background:rgba(91,143,249,.11);color:#a5beff}
+.sb-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:52%;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:0 2px 2px 0}
+.sb-item.dragging{opacity:.25}
+.sb-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.sb-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-del-btn{width:14px;height:14px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--red);opacity:0;transition:opacity .12s;flex-shrink:0;cursor:pointer}
+.sb-item:hover .sb-del-btn{opacity:.75}
+.sb-del-btn:hover{background:rgba(239,68,68,.12);opacity:1!important}
+.sb-drag{color:var(--t3);font-size:10px;cursor:grab;padding:0 1px;opacity:0;transition:opacity .12s;user-select:none;flex-shrink:0;letter-spacing:-1px}
+.sb-item:hover .sb-drag{opacity:.5}
+
+/* sections */
+.sb-section{border-radius:7px;margin-bottom:2px;transition:background .12s}
+.sb-section.drag-over{background:rgba(91,143,249,.06);outline:1.5px dashed rgba(91,143,249,.22);outline-offset:-1px}
+.sb-sec-lbl{display:block;font-size:9px;font-weight:700;color:var(--t3);letter-spacing:1.8px;text-transform:uppercase;padding:7px 7px 3px}
+.sb-sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:6px 7px 2px}
+.sb-sec-txt{font-size:9px;font-weight:700;color:var(--t3);letter-spacing:1.8px;text-transform:uppercase;cursor:pointer;border-radius:4px;padding:1px 3px;transition:all .12s}
+.sb-sec-txt:hover{background:rgba(128,128,128,.08);color:var(--t2)}
+.sb-sec-acts{display:flex;gap:2px;opacity:0;transition:opacity .12s}
+.sb-section:hover .sb-sec-acts{opacity:1}
+.sb-sec-act{width:15px;height:15px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8.5px;cursor:pointer;color:var(--t3);transition:all .12s}
+.sb-sec-act:hover{background:rgba(128,128,128,.12);color:var(--t1)}
+.sb-sec-act.del:hover{background:rgba(239,68,68,.12);color:var(--red)}
+.drop-line{height:2px;background:var(--accent);border-radius:2px;margin:1px 8px;pointer-events:none}
+.sb-add-sec{display:flex;align-items:center;justify-content:center;gap:4px;padding:6px;margin:6px 4px 3px;color:var(--t3);font-size:11px;cursor:pointer;border-radius:7px;border:1px dashed rgba(128,128,128,.18);transition:all .14s}
+.sb-add-sec:hover{color:var(--accent);border-color:rgba(91,143,249,.32);background:rgba(91,143,249,.04)}
+
+/* ── Content ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg0)}
+
+/* ── Dashboard ── */
+.home{flex:1;overflow-y:auto;padding:22px 26px}
+.hero-title{font-size:21px;font-weight:800;margin-bottom:4px}
+.hero-title span{background:linear-gradient(135deg,var(--accent),#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{color:var(--t2);font-size:12.5px;margin-bottom:20px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:11px;margin-bottom:22px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,linear-gradient(90deg,var(--accent),var(--accent2)))}
+.kpi-label{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.kpi-val{font-size:26px;font-weight:800;color:var(--kv,var(--accent))}
+.kpi-sub{font-size:9px;color:var(--t3);margin-top:2px}
+.grid-title{font-size:13.5px;font-weight:700;margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.grid-title::after{content:'';flex:1;height:1px;background:var(--border);margin-left:8px}
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:11px}
+.mod-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.mod-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(91,143,249,.05),transparent 70%);opacity:0;transition:opacity .18s}
+.mod-card:hover{border-color:rgba(91,143,249,.2);transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.16)}
+.mod-card:hover::after{opacity:1}
+.mc-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:9px}
+.mc-cat{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px}
+.mc-name{font-size:13px;font-weight:700;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc-url{font-size:10px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc-arrow{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--t3);opacity:0;transition:all .16s}
+.mod-card:hover .mc-arrow{opacity:1;right:8px}
+.empty{text-align:center;padding:50px 20px;color:var(--t2);grid-column:1/-1}
+.empty-ico{font-size:44px;opacity:.27;margin-bottom:9px}
+.empty-t{font-size:13.5px;margin-bottom:4px}
+.empty-s{font-size:11.5px;color:var(--t3)}
+
+/* ── Viewer ── */
+.viewer{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.viewer-tb{height:43px;flex-shrink:0;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:7px}
+.vt-title{font-size:12.5px;font-weight:700;white-space:nowrap}
+.vt-url{flex:1;background:rgba(128,128,128,.07);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:10px;color:var(--t2);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vt-hint{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.22);border-radius:6px;padding:2px 8px;font-size:10px;color:var(--amber);white-space:nowrap;flex-shrink:0}
+.viewer-body{flex:1;position:relative}
+.viewer-body iframe{width:100%;height:100%;border:none;background:#fff}
+.v-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg0);gap:13px;transition:opacity .3s}
+.spinner{width:34px;height:34px;border-radius:50%;border:3px solid rgba(91,143,249,.15);border-top-color:var(--accent);animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.v-loading-t{font-size:12px;color:var(--t2)}
+.v-serverdown,.v-localfile{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg0);gap:9px}
+.vsd-icon{font-size:46px;opacity:.27;line-height:1}
+.vsd-title{font-size:17px;font-weight:800;color:var(--t2);margin-top:4px}
+.vsd-sub{font-size:12px;color:var(--t3);text-align:center;max-width:320px;line-height:1.7}
+.vsd-path{font-size:10px;color:var(--t3);margin-top:5px}
+.vsd-cmd{background:var(--bg3);border:1px solid rgba(245,158,11,.22);border-radius:8px;padding:7px 14px;font-family:monospace;font-size:12px;color:var(--amber)}
+
+/* ── Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.on{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:15px;padding:23px;width:460px;max-width:94vw;max-height:90vh;overflow-y:auto;transform:scale(.94) translateY(12px);transition:transform .2s;box-shadow:var(--shadow)}
+.overlay.on .modal{transform:scale(1) translateY(0)}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:17px}
+.modal-title{font-size:15.5px;font-weight:800}
+.modal-close{background:rgba(128,128,128,.08);border:1px solid var(--border);border-radius:6px;width:26px;height:26px;cursor:pointer;color:var(--t2);font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.modal-close:hover{background:rgba(128,128,128,.14);color:var(--t1)}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.fi{width:100%;background:rgba(128,128,128,.07);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--t1);font-size:13px;outline:none;transition:border-color .18s;font-family:inherit}
+.fi:focus{border-color:rgba(91,143,249,.5)}
+.fi::placeholder{color:var(--t3)}
+.emoji-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;max-height:100px;overflow-y:auto}
+.e-btn{background:rgba(128,128,128,.07);border:1px solid transparent;border-radius:5px;padding:4px;cursor:pointer;font-size:15px;text-align:center;transition:all .1s}
+.e-btn:hover,.e-btn.sel{background:rgba(91,143,249,.14);border-color:var(--accent)}
+.c-row{display:flex;gap:6px;flex-wrap:wrap}
+.c-btn{width:26px;height:26px;border-radius:6px;border:2.5px solid transparent;cursor:pointer;transition:all .1s}
+.c-btn:hover,.c-btn.sel{border-color:#fff;transform:scale(1.15)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:13px;border-top:1px solid var(--border)}
+
+/* ── Toast ── */
+.toasts{position:fixed;bottom:16px;right:16px;z-index:500;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 14px;font-size:12px;color:var(--t1);box-shadow:0 7px 18px rgba(0,0,0,.25);animation:tIn .22s ease forwards}
+@keyframes tIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes tOut{to{transform:translateX(110%);opacity:0}}
+.toast.out{animation:tOut .22s ease forwards}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <button class="hdr-btn btn-out btn-ico" id="sbToggle" onclick="toggleSidebar()" title="折叠/展开侧边栏">☰</button>
+  <div class="logo-box">P</div>
+  <div style="display:flex;flex-direction:column;margin-left:2px">
+    <div class="brand-name">Packaging Portal</div>
+    <div class="brand-tag">Department Dashboard</div>
+  </div>
+  <div class="hdr-sep"></div>
+  <div class="clock" id="clock">--:--:--</div>
+  <div class="sep"></div>
+  <button class="hdr-btn btn-out btn-ico" id="themeBtn" onclick="toggleTheme()" title="日夜模式">🌙</button>
+  <button class="hdr-btn btn-out" onclick="showHome()">🏠 主页</button>
+  <button class="hdr-btn btn-solid" onclick="openModal()">＋ 添加模块</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-search">
+      <input class="sb-input" id="sbSearch" type="text" placeholder="🔍 搜索…" oninput="filterNav()">
+    </div>
+    <nav class="sb-nav" id="sbNav"></nav>
+  </aside>
+
+  <main class="content">
+    <div class="home hidden" id="homePage">
+      <div class="hero-title">欢迎来到 <span>Packaging</span> 看板</div>
+      <div class="hero-sub">集中管理常用系统与工具，点击卡片或侧边栏直接内嵌预览</div>
+      <div class="kpi-row" id="kpiRow"></div>
+      <div class="grid-title">全部模块</div>
+      <div class="mod-grid" id="modGrid"></div>
+    </div>
+
+    <div class="viewer hidden" id="viewerPage">
+      <div class="viewer-tb">
+        <button class="hdr-btn btn-out" style="padding:3px 10px;font-size:11px" onclick="showHome()">← 返回</button>
+        <div class="sep"></div>
+        <div class="vt-title" id="vtTitle">-</div>
+        <div class="sep"></div>
+        <div class="vt-url" id="vtUrl">-</div>
+        <div class="vt-hint hidden" id="vtHint">⚡ <span id="vtHintCmd"></span></div>
+        <button class="hdr-btn btn-out btn-ico" onclick="reloadIframe()" title="刷新">↺</button>
+        <button class="hdr-btn btn-out btn-ico" onclick="newTab()" title="新标签">↗</button>
+      </div>
+      <div class="viewer-body">
+        <div class="v-loading" id="vLoading">
+          <div class="spinner"></div>
+          <div class="v-loading-t">正在探测服务器…</div>
+        </div>
+        <div class="v-serverdown hidden" id="vServerDown">
+          <div class="vsd-icon">⚡</div>
+          <div class="vsd-title">服务器未运行</div>
+          <div class="vsd-sub">请先双击运行以下启动脚本，然后点击重试</div>
+          <div class="vsd-path">📁 0 - Digital Project \</div>
+          <div class="vsd-cmd" id="vsdCmd">-</div>
+          <button class="hdr-btn btn-solid" onclick="retryModule()" style="margin-top:12px">↺ 重试连接</button>
+        </div>
+        <div class="v-localfile hidden" id="vLocalFile">
+          <div class="vsd-icon">📂</div>
+          <div class="vsd-title">已在新标签页中打开</div>
+          <div class="vsd-sub">本地 HTML 文件已在浏览器新标签页中打开</div>
+          <div class="vsd-cmd" id="vlfPath" style="font-size:11px;max-width:480px;word-break:break-all">-</div>
+          <button class="hdr-btn btn-solid" onclick="retryModule()" style="margin-top:12px">↗ 再次打开</button>
+        </div>
+        <iframe id="mainFrame" onload="frameLoaded()"></iframe>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">📦 添加新模块</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="fg"><label>模块名称 *</label><input class="fi" id="fName" type="text" placeholder="生产日报、质量追踪、SAP…"></div>
+    <div class="fg"><label>网页链接 *</label><input class="fi" id="fUrl" type="text" placeholder="https://…"></div>
+    <div class="fg"><label>章节 / 分类</label><input class="fi" id="fCat" type="text" placeholder="我的项目 / 报表 / 工具…" list="catDl"><datalist id="catDl"></datalist></div>
+    <div class="fg"><label>图标</label><div class="emoji-grid" id="emojiGrid"></div></div>
+    <div class="fg"><label>颜色</label><div class="c-row" id="colorRow"></div></div>
+    <div class="modal-footer">
+      <button class="hdr-btn btn-out" onclick="closeModal()">取消</button>
+      <button class="hdr-btn btn-solid" onclick="addModule()">确认添加</button>
+    </div>
+  </div>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+const EMOJIS=['📦','📋','📊','📈','📉','🏭','⚙️','🔧','🛠️','📌','🗂️','📁','🖥️','💻','🌐','🔗','🔍','✅','⚠️','🚀','💡','🎯','🏆','👥','💼','🔔','📢','🛡️','⭐','🔑','🔄','🧪','⚡','💎','🌟','📐','🧩','🔎','📣','🏠'];
+const COLORS=['#5b8ff9','#7c3aed','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#84cc16','#f97316','#6366f1','#14b8a6','#a855f7','#0ea5e9','#22c55e','#e11d48'];
+const DEFAULTS=[
+  {id:101,name:'Label Dashboard',url:'http://localhost:5050',category:'我的项目',icon:'🏷️',color:'#5b8ff9',startCmd:'Project 1 - Label Dashboard\\启动报表.bat'},
+  {id:102,name:'Weekly Review',url:'http://localhost:8080',category:'我的项目',icon:'📅',color:'#10b981',startCmd:'Project 3 - Weekly review\\启动网站.bat'},
+  {id:103,name:'Workload Manager',url:'http://localhost:5173',category:'我的项目',icon:'📊',color:'#7c3aed',startCmd:'Project 5 - Workload\\启动管理系统.bat'},
+  {id:104,name:'户型规划图',winPath:'C:\\Users\\M292447\\0 - Digital Project\\Project-户型改造\\户型规划.html',category:'户型改造',icon:'🏠',color:'#f59e0b'},
+  {id:105,name:'全屋效果图',winPath:'C:\\Users\\M292447\\0 - Digital Project\\Project-户型改造\\全屋效果图.html',category:'户型改造',icon:'🛋️',color:'#f59e0b'},
+  {id:106,name:'3D 空间效果',winPath:'C:\\Users\\M292447\\0 - Digital Project\\Project-户型改造\\右侧空间3D效果图.html',category:'户型改造',icon:'🏗️',color:'#f97316'},
+];
+
+let modules=[],sections=[],activeId=null,selEmoji='📦',selColor=COLORS[0],currentUrl='',dragId=null;
+
+/* helpers */
+function hexA(h,a){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return `rgba(${r},${g},${b},${a})`}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function safeDate(t){try{const n=new Date();if(t==='d')return n.toLocaleDateString('zh-CN',{month:'long',day:'numeric'});return n.toLocaleDateString('zh-CN',{weekday:'long'})}catch(e){const n=new Date();return t==='d'?`${n.getMonth()+1}月${n.getDate()}日`:['周日','周一','周二','周三','周四','周五','周六'][n.getDay()]}}
+function getUrl(m){if(m.winPath)return 'file:///'+encodeURI(m.winPath.replace(/\\/g,'/'));return m.url||''}
+
+/* persistence */
+function load(){try{const s=localStorage.getItem('pkg_modules_v3');modules=s?JSON.parse(s):[...DEFAULTS]}catch{modules=[...DEFAULTS]}}
+function save(){try{localStorage.setItem('pkg_modules_v3',JSON.stringify(modules))}catch(e){console.warn(e)}}
+function loadSec(){try{const s=localStorage.getItem('pkg_sec_v1');sections=s?JSON.parse(s):['我的项目','户型改造'];if(!s)saveSec()}catch{sections=['我的项目','户型改造']}}
+function saveSec(){try{localStorage.setItem('pkg_sec_v1',JSON.stringify(sections))}catch(e){}}
+function getOrderedSecs(){const d=[...sections];[...new Set(modules.map(m=>m.category||'其他'))].forEach(c=>{if(!d.includes(c))d.push(c)});return d}
+
+/* clock */
+function tick(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleDateString('zh-CN')+'  '+n.toLocaleTimeString('zh-CN',{hour12:false})}
+setInterval(tick,1000);tick();
+
+/* nav render */
+function renderNav(filter){
+  const nav=document.getElementById('sbNav');
+  const q=(filter||'').toLowerCase();
+  const list=q?modules.filter(m=>m.name.toLowerCase().includes(q)||(m.category||'').toLowerCase().includes(q)):modules;
+  const secs=getOrderedSecs();
+  let h=`<span class="sb-sec-lbl">概览</span>
+    <div class="sb-item ${activeId===null?'active':''}" onclick="showHome()">
+      <div class="sb-icon" style="background:rgba(91,143,249,.13)">🏠</div>
+      <span class="sb-name">主页概览</span>
+    </div>`;
+  secs.forEach(cat=>{
+    const items=list.filter(m=>(m.category||'其他')===cat);
+    if(q&&items.length===0)return;
+    const ck=encodeURIComponent(cat);
+    h+=`<div class="sb-section" data-cat="${ck}" ondragover="onDragOverSec(event)" ondragleave="onDragLeaveSec(event)" ondrop="onDropSec(event)">
+      <div class="sb-sec-hdr">
+        <span class="sb-sec-txt">${escH(cat)}</span>
+        <div class="sb-sec-acts">
+          <span class="sb-sec-act ren-btn" title="重命名">✎</span>
+          <span class="sb-sec-act del del-sec-btn" title="删除">✕</span>
+        </div>
+      </div>`;
+    items.forEach(m=>{
+      h+=`<div class="sb-item${activeId===m.id?' active':''}" id="sbi-${m.id}" data-mid="${m.id}" draggable="true"
+        ondragstart="onDragStart(event)" ondragend="onDragEnd(event)"
+        ondragover="onDragOverItem(event)" ondrop="onDropItem(event)"
+        onclick="openModule(${m.id})">
+        <div class="sb-drag" title="拖拽">⠿</div>
+        <div class="sb-icon" style="background:${hexA(m.color,.12)}">${m.icon}</div>
+        <span class="sb-name">${escH(m.name)}</span>
+        <span class="sb-del-btn item-del">✕</span>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`<div class="sb-add-sec" onclick="createSection()">＋ 新建章节</div>`;
+  nav.innerHTML=h;
+  nav.querySelectorAll('.ren-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();renameSec(getCat(b))}));
+  nav.querySelectorAll('.del-sec-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();deleteSec(getCat(b))}));
+  nav.querySelectorAll('.sb-sec-txt').forEach(el=>el.addEventListener('dblclick',()=>renameSec(getCat(el))));
+  nav.querySelectorAll('.item-del').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();delModule(parseInt(b.closest('[data-mid]').dataset.mid))}));
+}
+function filterNav(){renderNav(document.getElementById('sbSearch').value)}
+function getCat(el){return decodeURIComponent(el.closest('[data-cat]')?.dataset.cat||'')}
+
+/* drag & drop */
+function onDragStart(e){dragId=parseInt(e.currentTarget.dataset.mid);e.dataTransfer.effectAllowed='move';requestAnimationFrame(()=>e.currentTarget.classList.add('dragging'))}
+function onDragEnd(e){e.currentTarget.classList.remove('dragging');dragId=null;document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));document.querySelectorAll('.drop-line').forEach(el=>el.remove())}
+function onDragOverSec(e){if(!dragId)return;e.preventDefault();e.stopPropagation();document.querySelectorAll('.sb-section.drag-over').forEach(el=>el.classList.remove('drag-over'));e.currentTarget.classList.add('drag-over')}
+function onDragLeaveSec(e){if(!e.currentTarget.contains(e.relatedTarget))e.currentTarget.classList.remove('drag-over')}
+function onDropSec(e){
+  e.preventDefault();e.stopPropagation();
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  if(!dragId)return;
+  const cat=getCat(e.currentTarget);
+  const m=modules.find(x=>x.id===dragId);
+  if(m&&(m.category||'其他')!==cat){m.category=cat;save();renderNav();renderHome();toast(`已移至"${cat}"`)}
+}
+function onDragOverItem(e){
+  if(!dragId)return;
+  const mid=parseInt(e.currentTarget.dataset.mid);
+  if(dragId===mid)return;
+  e.preventDefault();e.stopPropagation();
+  document.querySelectorAll('.drop-line').forEach(x=>x.remove());
+  document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));
+  const rect=e.currentTarget.getBoundingClientRect();
+  e.currentTarget._dropAbove=e.clientY<rect.top+rect.height/2;
+  const line=document.createElement('div');line.className='drop-line';
+  if(e.currentTarget._dropAbove)e.currentTarget.before(line);else e.currentTarget.after(line);
+}
+function onDropItem(e){
+  e.preventDefault();e.stopPropagation();
+  document.querySelectorAll('.drop-line').forEach(x=>x.remove());
+  if(!dragId)return;
+  const tgtId=parseInt(e.currentTarget.dataset.mid);
+  if(dragId===tgtId)return;
+  const above=e.currentTarget._dropAbove!==false;
+  const si=modules.findIndex(x=>x.id===dragId);if(si===-1)return;
+  const [src]=modules.splice(si,1);
+  const ti=modules.findIndex(x=>x.id===tgtId);
+  src.category=modules[ti].category;
+  modules.splice(above?ti:ti+1,0,src);
+  save();renderNav();renderHome();
+}
+
+/* section management */
+function createSection(){
+  const name=prompt('请输入新章节名称：');if(!name?.trim())return;
+  const t=name.trim();
+  if(getOrderedSecs().includes(t)){toast('⚠️ 章节已存在');return}
+  sections.push(t);saveSec();renderNav();toast(`✅ 章节"${t}"已创建`);
+}
+function renameSec(cat){
+  if(!cat)return;
+  const name=prompt(`重命名"${cat}"：`,cat);if(!name?.trim()||name.trim()===cat)return;
+  const t=name.trim();
+  if(getOrderedSecs().includes(t)){toast('⚠️ 名称已存在');return}
+  sections=sections.map(s=>s===cat?t:s);
+  modules.forEach(m=>{if((m.category||'其他')===cat)m.category=t});
+  save();saveSec();renderNav();renderHome();toast(`已重命名为"${t}"`);
+}
+function deleteSec(cat){
+  if(!cat)return;
+  const items=modules.filter(m=>(m.category||'其他')===cat);
+  if(items.length&&!confirm(`"${cat}" 有 ${items.length} 个模块，删除后移至"其他"。确认？`))return;
+  items.forEach(m=>m.category='其他');
+  sections=sections.filter(s=>s!==cat);
+  save();saveSec();renderNav();renderHome();toast(`章节"${cat}"已删除`);
+}
+
+/* home */
+function renderHome(){
+  const cats=[...new Set(modules.map(m=>m.category||'其他'))];
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi" style="--kc:linear-gradient(90deg,#5b8ff9,#7c3aed);--kv:#a5beff"><div class="kpi-label">模块总数</div><div class="kpi-val">${modules.length}</div><div class="kpi-sub">已配置链接</div></div>
+    <div class="kpi" style="--kc:linear-gradient(90deg,#06b6d4,#10b981);--kv:#6ee7b7"><div class="kpi-label">分类数量</div><div class="kpi-val">${cats.length}</div><div class="kpi-sub">模块分组</div></div>
+    <div class="kpi" style="--kc:linear-gradient(90deg,#f59e0b,#ef4444);--kv:#fcd34d"><div class="kpi-label">今日日期</div><div class="kpi-val" style="font-size:16px;margin-top:2px">${safeDate('d')}</div><div class="kpi-sub">${safeDate('w')}</div></div>`;
+  const g=document.getElementById('modGrid');
+  if(!modules.length){g.innerHTML=`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">暂无模块</div><div class="empty-s">点击右上角"添加模块"开始</div></div>`;return}
+  g.innerHTML=modules.map(m=>`<div class="mod-card" onclick="openModule(${m.id})">
+    <div class="mc-icon" style="background:${hexA(m.color,.12)}">${m.icon}</div>
+    <div class="mc-cat">${escH(m.category||'其他')}</div>
+    <div class="mc-name">${escH(m.name)}</div>
+    <div class="mc-url">${m.winPath?'📂 '+m.winPath.split('\\').pop():(m.url||'')}</div>
+    <span class="mc-arrow">→</span>
+  </div>`).join('');
+}
+
+/* navigation */
+function showHome(){activeId=null;document.getElementById('homePage').classList.remove('hidden');document.getElementById('viewerPage').classList.add('hidden');renderNav();renderHome()}
+
+async function openModule(id){
+  const m=modules.find(x=>x.id===id);if(!m)return;
+  activeId=id;const url=getUrl(m);currentUrl=url;renderNav();
+  if(m.winPath){
+    window.open(url,'_blank');
+    document.getElementById('homePage').classList.add('hidden');
+    document.getElementById('viewerPage').classList.remove('hidden');
+    document.getElementById('vtTitle').textContent=`${m.icon} ${m.name}`;
+    document.getElementById('vtUrl').textContent=m.winPath.split('\\').pop();
+    document.getElementById('vtHint').classList.add('hidden');
+    setVState('localfile');document.getElementById('vlfPath').textContent=m.winPath;return;
+  }
+  document.getElementById('homePage').classList.add('hidden');
+  document.getElementById('viewerPage').classList.remove('hidden');
+  document.getElementById('vtTitle').textContent=`${m.icon} ${m.name}`;
+  document.getElementById('vtUrl').textContent=url;
+  if(m.startCmd){document.getElementById('vtHint').classList.remove('hidden');document.getElementById('vtHintCmd').textContent=m.startCmd.split('\\').pop()}
+  else document.getElementById('vtHint').classList.add('hidden');
+  setVState('loading');
+  const ok=await probe(url);
+  if(!ok){setVState('serverdown');document.getElementById('vsdCmd').textContent=m.startCmd?`0 - Digital Project\\${m.startCmd}`:url;return}
+  setVState('iframe');document.getElementById('mainFrame').src=url;
+}
+
+function setVState(s){
+  const lo=document.getElementById('vLoading');
+  lo.style.opacity=s==='loading'?'1':'0';lo.style.pointerEvents=s==='loading'?'auto':'none';
+  document.getElementById('vServerDown').classList.toggle('hidden',s!=='serverdown');
+  document.getElementById('vLocalFile').classList.toggle('hidden',s!=='localfile');
+  if(s!=='iframe')document.getElementById('mainFrame').src='about:blank';
+}
+async function probe(url){const ac=new AbortController();const t=setTimeout(()=>ac.abort(),3000);try{await fetch(url,{mode:'no-cors',signal:ac.signal});clearTimeout(t);return true}catch{clearTimeout(t);return false}}
+function retryModule(){if(activeId)openModule(activeId)}
+function frameLoaded(){document.getElementById('vLoading').style.opacity='0';document.getElementById('vLoading').style.pointerEvents='none'}
+async function reloadIframe(){
+  if(!currentUrl)return;setVState('loading');
+  const ok=await probe(currentUrl);
+  if(!ok){const m=modules.find(x=>x.id===activeId);setVState('serverdown');document.getElementById('vsdCmd').textContent=m?.startCmd?`0 - Digital Project\\${m.startCmd}`:currentUrl;return}
+  setVState('iframe');document.getElementById('mainFrame').src=currentUrl;
+}
+function newTab(){if(currentUrl)window.open(currentUrl,'_blank')}
+
+/* module crud */
+function delModule(id){
+  const m=modules.find(x=>x.id===id);if(!m||!confirm(`删除"${m.name}"？`))return;
+  modules=modules.filter(x=>x.id!==id);save();
+  if(activeId===id)showHome();else{renderNav();renderHome()}
+  toast(`已删除：${m.name}`);
+}
+
+/* modal */
+function openModal(){
+  selEmoji='📦';selColor=COLORS[0];
+  ['fName','fUrl','fCat'].forEach(id=>document.getElementById(id).value='');
+  renderEmojiGrid();renderColorRow();updateCatDl();
+  document.getElementById('modal').classList.add('on');
+  setTimeout(()=>document.getElementById('fName').focus(),220);
+}
+function closeModal(){document.getElementById('modal').classList.remove('on')}
+function addModule(){
+  try{
+    const name=document.getElementById('fName').value.trim();
+    const url=document.getElementById('fUrl').value.trim();
+    const cat=document.getElementById('fCat').value.trim()||'其他';
+    if(!name){toast('⚠️ 请填写名称');return}if(!url){toast('⚠️ 请填写链接');return}
+    const fu=/^https?:\/\//.test(url)?url:'https://'+url;
+    const nid=Date.now();
+    if(!sections.includes(cat)){sections.push(cat);saveSec()}
+    modules.push({id:nid,name,url:fu,category:cat,icon:selEmoji,color:selColor});
+    save();closeModal();toast(`✅ 已添加"${name}"`);openModule(nid);
+  }catch(e){console.error(e);toast('❌ 添加失败')}
+}
+
+/* pickers */
+function renderEmojiGrid(){
+  document.getElementById('emojiGrid').innerHTML=EMOJIS.map(e=>`<div class="e-btn${e===selEmoji?' sel':''}" data-e="${e}">${e}</div>`).join('');
+  document.getElementById('emojiGrid').querySelectorAll('.e-btn').forEach(b=>b.addEventListener('click',()=>{selEmoji=b.dataset.e;renderEmojiGrid()}));
+}
+function renderColorRow(){
+  document.getElementById('colorRow').innerHTML=COLORS.map(c=>`<div class="c-btn${c===selColor?' sel':''}" data-c="${c}" style="background:${c}"></div>`).join('');
+  document.getElementById('colorRow').querySelectorAll('.c-btn').forEach(b=>b.addEventListener('click',()=>{selColor=b.dataset.c;renderColorRow()}));
+}
+function updateCatDl(){
+  const cats=[...new Set([...sections,...modules.map(m=>m.category||'其他')])];
+  document.getElementById('catDl').innerHTML=cats.map(c=>`<option value="${escH(c)}">`).join('');
+}
+
+/* toast */
+function toast(msg){
+  const el=document.createElement('div');el.className='toast';el.textContent=msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),240)},2800);
+}
+
+/* sidebar collapse */
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');sb.classList.toggle('collapsed');
+  document.getElementById('sbToggle').textContent=sb.classList.contains('collapsed')?'▶':'☰';
+}
+
+/* theme */
+function toggleTheme(){
+  const light=document.body.classList.toggle('light');
+  document.getElementById('themeBtn').textContent=light?'🌙':'☀️';
+  try{localStorage.setItem('pkg_theme',light?'light':'dark')}catch(e){}
+}
+function loadTheme(){
+  try{if(localStorage.getItem('pkg_theme')==='light'){document.body.classList.add('light');document.getElementById('themeBtn').textContent='🌙'}}catch(e){}
+}
+
+/* modal backdrop */
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal()});
+['fName','fUrl','fCat'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addModule()}));
+
+/* init */
+load();loadSec();loadTheme();showHome();
+</script>
+</body>
+</html>
