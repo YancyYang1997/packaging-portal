@@ -294,10 +294,9 @@ const DEFAULTS=[
   {id:103,name:'Workload Manager',url:'http://localhost:5173',category:'我的项目',icon:'📊',color:'#7c3aed',startCmd:'Project 5 - Workload\\启动管理系统.bat'},
   {id:107,name:'PKG List',url:'http://localhost:8888',category:'我的项目',icon:'📦',color:'#06b6d4',startCmd:'Project 4 - PKG List\\bom_server.py'},
   {id:108,name:'本地化项目管理',url:'http://localhost:5000',category:'我的项目',icon:'🌐',color:'#f59e0b',startCmd:'Project 6 - Localization Project\\app.py'},
-  {id:104,name:'户型规划图',winPath:'C:\\Users\\M292447\\0 - Digital Project\\Project-户型改造\\户型规划.html',category:'户型改造',icon:'🏠',color:'#f59e0b'},
-  {id:105,name:'全屋效果图',winPath:'C:\\Users\\M292447\\0 - Digital Project\\Project-户型改造\\全屋效果图.html',category:'户型改造',icon:'🛋️',color:'#f59e0b'},
-  {id:106,name:'3D 空间效果',winPath:'C:\\Users\\M292447\\0 - Digital Project\\Project-户型改造\\右侧空间3D效果图.html',category:'户型改造',icon:'🏗️',color:'#f97316'},
 ];
+// 已移除的模块 id（户型改造，与工作无关）
+const REMOVED_IDS=new Set([104,105,106]);
 
 let modules=[],sections=[],activeId=null,selEmoji='📦',selColor=COLORS[0],currentUrl='',dragId=null;
 
@@ -310,13 +309,18 @@ function getUrl(m){if(m.winPath)return 'file:///'+encodeURI(m.winPath.replace(/\
 /* persistence */
 function load(){
   try{const s=localStorage.getItem('pkg_modules_v3');modules=s?JSON.parse(s):[...DEFAULTS]}catch{modules=[...DEFAULTS]}
+  // 清除已移除的模块（如户型改造 104/105/106）
+  modules=modules.filter(m=>!REMOVED_IDS.has(m.id));
   // 自动补入新增的默认模块（按 id 判断是否已存在）
   const existIds=new Set(modules.map(m=>m.id));
   DEFAULTS.forEach(d=>{if(!existIds.has(d.id))modules.push({...d})});
+  // 去重：同一 URL/winPath 只保留第一个
+  const seenKeys=new Set();
+  modules=modules.filter(m=>{const k=m.url||m.winPath||String(m.id);if(seenKeys.has(k))return false;seenKeys.add(k);return true;});
   save();
 }
 function save(){try{localStorage.setItem('pkg_modules_v3',JSON.stringify(modules))}catch(e){console.warn(e)}}
-function loadSec(){try{const s=localStorage.getItem('pkg_sec_v1');sections=s?JSON.parse(s):['我的项目','户型改造'];if(!s)saveSec()}catch{sections=['我的项目','户型改造']}}
+function loadSec(){try{const s=localStorage.getItem('pkg_sec_v1');sections=s?JSON.parse(s):['我的项目'];if(!s)saveSec();else{sections=sections.filter(s=>s!=='户型改造');saveSec()}}catch{sections=['我的项目']}}
 function saveSec(){try{localStorage.setItem('pkg_sec_v1',JSON.stringify(sections))}catch(e){}}
 function getOrderedSecs(){const d=[...sections];[...new Set(modules.map(m=>m.category||'其他'))].forEach(c=>{if(!d.includes(c))d.push(c)});return d}
 
