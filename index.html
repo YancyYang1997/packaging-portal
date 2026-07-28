@@ -122,7 +122,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
 .viewer{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .viewer-tb{height:43px;flex-shrink:0;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:7px}
 .vt-title{font-size:12.5px;font-weight:700;white-space:nowrap}
-.vt-url{flex:1;background:rgba(128,128,128,.07);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:10px;color:var(--t2);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vt-url{flex:1;background:rgba(128,128,128,.07);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:10px;color:var(--t2);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;outline:none;cursor:text;transition:border-color .15s,background .15s}
+.vt-url:focus{background:rgba(91,143,249,.08);border-color:var(--accent);color:var(--t1)}
 .vt-hint{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.22);border-radius:6px;padding:2px 8px;font-size:10px;color:var(--amber);white-space:nowrap;flex-shrink:0}
 .viewer-body{flex:1;position:relative}
 .viewer-body iframe{width:100%;height:100%;border:none;background:#fff}
@@ -234,7 +235,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
         <div class="sep"></div>
         <div class="vt-title" id="vtTitle">-</div>
         <div class="sep"></div>
-        <div class="vt-url" id="vtUrl">-</div>
+        <input class="vt-url" id="vtUrl" value="-" spellcheck="false" title="可直接编辑 URL，按 Enter 跳转" onkeydown="vtUrlKeydown(event)">
         <div class="vt-hint hidden" id="vtHint">⚡ <span id="vtHintCmd"></span></div>
         <button class="hdr-btn btn-out btn-ico" onclick="reloadIframe()" title="刷新">↺</button>
         <button class="hdr-btn btn-out btn-ico" onclick="newTab()" title="新标签">↗</button>
@@ -468,14 +469,14 @@ async function openModule(id){
     document.getElementById('homePage').classList.add('hidden');
     document.getElementById('viewerPage').classList.remove('hidden');
     document.getElementById('vtTitle').textContent=`${m.icon} ${m.name}`;
-    document.getElementById('vtUrl').textContent=m.winPath.split('\\').pop();
+    document.getElementById('vtUrl').value=m.winPath.split('\\').pop();
     document.getElementById('vtHint').classList.add('hidden');
     setVState('localfile');document.getElementById('vlfPath').textContent=m.winPath;return;
   }
   document.getElementById('homePage').classList.add('hidden');
   document.getElementById('viewerPage').classList.remove('hidden');
   document.getElementById('vtTitle').textContent=`${m.icon} ${m.name}`;
-  document.getElementById('vtUrl').textContent=url;
+  document.getElementById('vtUrl').value=url;
   if(m.startCmd){document.getElementById('vtHint').classList.remove('hidden');document.getElementById('vtHintCmd').textContent=m.startCmd.split('\\').pop()}
   else document.getElementById('vtHint').classList.add('hidden');
   setVState('loading');
@@ -501,6 +502,22 @@ async function reloadIframe(){
   setVState('iframe');document.getElementById('mainFrame').src=currentUrl;
 }
 function newTab(){if(currentUrl)window.open(currentUrl,'_blank')}
+function vtUrlKeydown(e){
+  if(e.key!=='Enter')return;
+  e.preventDefault();
+  const input=document.getElementById('vtUrl');
+  let url=input.value.trim();
+  if(!url||url==='-')return;
+  if(!/^https?:\/\//i.test(url))url='http://'+url;
+  input.value=url;
+  currentUrl=url;
+  input.blur();
+  setVState('loading');
+  probe(url).then(ok=>{
+    if(ok){setVState('iframe');document.getElementById('mainFrame').src=url;}
+    else{setVState('serverdown');document.getElementById('vsdCmd').textContent=url;}
+  });
+}
 
 /* module crud */
 function delModule(id){
