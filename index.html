@@ -308,7 +308,13 @@ function safeDate(t){try{const n=new Date();if(t==='d')return n.toLocaleDateStri
 function getUrl(m){if(m.winPath)return 'file:///'+encodeURI(m.winPath.replace(/\\/g,'/'));return m.url||''}
 
 /* persistence */
-function load(){try{const s=localStorage.getItem('pkg_modules_v3');modules=s?JSON.parse(s):[...DEFAULTS]}catch{modules=[...DEFAULTS]}}
+function load(){
+  try{const s=localStorage.getItem('pkg_modules_v3');modules=s?JSON.parse(s):[...DEFAULTS]}catch{modules=[...DEFAULTS]}
+  // 自动补入新增的默认模块（按 id 判断是否已存在）
+  const existIds=new Set(modules.map(m=>m.id));
+  DEFAULTS.forEach(d=>{if(!existIds.has(d.id))modules.push({...d})});
+  save();
+}
 function save(){try{localStorage.setItem('pkg_modules_v3',JSON.stringify(modules))}catch(e){console.warn(e)}}
 function loadSec(){try{const s=localStorage.getItem('pkg_sec_v1');sections=s?JSON.parse(s):['我的项目','户型改造'];if(!s)saveSec()}catch{sections=['我的项目','户型改造']}}
 function saveSec(){try{localStorage.setItem('pkg_sec_v1',JSON.stringify(sections))}catch(e){}}
