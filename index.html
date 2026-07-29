@@ -170,11 +170,22 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
 
 /* ── Lock Screen ── */
 .lock-screen{position:fixed;inset:0;z-index:9999;background:var(--bg0);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0}
-.lock-box{background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:36px 40px 32px;width:340px;max-width:92vw;text-align:center;box-shadow:var(--shadow)}
+.lock-box{background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:36px 40px 32px;width:360px;max-width:92vw;text-align:center;box-shadow:var(--shadow)}
 .lock-icon{font-size:40px;margin-bottom:12px;display:block}
 .lock-brand{font-size:18px;font-weight:800;background:linear-gradient(135deg,#a5beff,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
-.lock-sub{font-size:11px;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:24px}
-.lock-input{width:100%;background:rgba(128,128,128,.07);border:1px solid var(--border2);border-radius:9px;padding:11px 14px;color:var(--t1);font-size:15px;outline:none;text-align:center;letter-spacing:3px;font-family:inherit;transition:border-color .18s;margin-bottom:14px}
+.lock-sub{font-size:11px;color:var(--t3);letter-spacing:1px;margin-bottom:24px;min-height:18px;transition:color .2s}
+.lock-sub.loading{color:var(--accent);animation:pulse-txt 1.2s ease-in-out infinite}
+@keyframes pulse-txt{0%,100%{opacity:1}50%{opacity:.45}}
+/* Microsoft 登录按钮 */
+.ms-btn{width:100%;padding:11px 14px;border:1px solid var(--border2);border-radius:9px;background:var(--bg3);color:var(--t1);font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .16s,border-color .16s,transform .16s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px}
+.ms-btn:hover:not(:disabled){background:rgba(91,143,249,.1);border-color:var(--accent);transform:translateY(-1px)}
+.ms-btn:disabled{opacity:.5;cursor:default}
+.ms-logo{display:flex;flex-shrink:0}
+/* 分割线 */
+.lock-divider{display:flex;align-items:center;gap:8px;margin:6px 0 14px;color:var(--t3);font-size:11px}
+.lock-divider::before,.lock-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+/* 员工号 fallback */
+.lock-input{width:100%;background:rgba(128,128,128,.07);border:1px solid var(--border2);border-radius:9px;padding:11px 14px;color:var(--t1);font-size:15px;outline:none;text-align:center;letter-spacing:3px;font-family:inherit;transition:border-color .18s;margin-bottom:14px;box-sizing:border-box}
 .lock-input:focus{border-color:rgba(91,143,249,.5)}
 .lock-input.shake{animation:shake .38s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
@@ -187,11 +198,30 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
 
 <div class="lock-screen" id="lockScreen">
   <div class="lock-box">
-    <span class="lock-icon">👤</span>
+    <span class="lock-icon">🔐</span>
     <div class="lock-brand">Packaging Portal</div>
-    <div class="lock-sub">请输入员工号登录</div>
-    <input class="lock-input" id="lockPwd" type="text" placeholder="例如 M292447" autocomplete="off" maxlength="20" style="letter-spacing:2px;text-transform:uppercase">
-    <button class="lock-btn" onclick="verifyLock()">进入</button>
+    <div class="lock-sub loading" id="lockSub">正在初始化登录…</div>
+
+    <!-- Microsoft 登录按钮（SSO 加载完成后显示） -->
+    <button class="ms-btn hidden" id="msLoginBtn" onclick="authLogin()">
+      <span class="ms-logo">
+        <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+          <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+          <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+          <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+        </svg>
+      </span>
+      使用 Microsoft 账号登录
+    </button>
+
+    <!-- Fallback：手动输入员工号 -->
+    <div id="lockFallback" class="hidden">
+      <div class="lock-divider">或手动输入</div>
+      <input class="lock-input" id="lockPwd" type="text" placeholder="例如 M292447" autocomplete="off" maxlength="20" style="text-transform:uppercase" onkeydown="if(event.key==='Enter')verifyLock()">
+      <button class="lock-btn" onclick="verifyLock()">进入</button>
+    </div>
+
     <div class="lock-err" id="lockErr"></div>
   </div>
 </div>
@@ -592,11 +622,74 @@ document.getElementById('modal').addEventListener('click',e=>{if(e.target===docu
 ['fName','fUrl','fCat'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addModule()}));
 
 /* ── Lock screen ── */
-function showEmpBadge(id){
-  document.getElementById('empId').textContent=id;
+/* ── Microsoft Auth (Career Path Skill) ── */
+function showEmpBadge(id,name){
+  const label=name&&name!==id?`${name} (${id})`:id;
+  document.getElementById('empId').textContent=label;
   document.getElementById('empBadge').style.display='flex';
   document.getElementById('empSep').style.display='block';
 }
+
+function grantPortalAccess(muid,name){
+  try{localStorage.setItem('pkg_employee','1');localStorage.setItem('pkg_emp_id',muid);if(name)localStorage.setItem('pkg_emp_name',name)}catch(e){}
+  showEmpBadge(muid,name);
+  const ls=document.getElementById('lockScreen');
+  ls.style.opacity='0';ls.style.transition='opacity .3s';
+  setTimeout(()=>{ls.remove();showHome();},320);
+}
+
+function setLockSub(msg,isLoading){
+  const el=document.getElementById('lockSub');
+  el.textContent=msg;
+  el.classList.toggle('loading',!!isLoading);
+}
+
+function showMsBtn(){
+  document.getElementById('msLoginBtn').classList.remove('hidden');
+  setLockSub('请使用 Microsoft 账号登录',false);
+}
+
+function showFallback(){
+  document.getElementById('lockFallback').classList.remove('hidden');
+  setLockSub('SSO 不可用，请手动输入员工号',false);
+  setTimeout(()=>document.getElementById('lockPwd')?.focus(),100);
+}
+
+async function getMsUser(token){
+  try{
+    const res=await fetch('https://graph.microsoft.com/v1.0/me?$select=mail,userPrincipalName,displayName',{headers:{Authorization:'Bearer '+token}});
+    if(!res.ok)return null;
+    const d=await res.json();
+    const email=(d.mail||d.userPrincipalName||'');
+    const muid=email.split('@')[0].toUpperCase()||'UNKNOWN';
+    return{muid,name:d.displayName||muid,email};
+  }catch{return null;}
+}
+
+async function lookupAndGrant(token){
+  setLockSub('正在获取用户信息…',true);
+  const user=await getMsUser(token);
+  if(!user){showMsBtn();document.getElementById('lockErr').textContent='无法读取账号信息，请重试';return;}
+  grantPortalAccess(user.muid,user.name);
+}
+
+async function authLogin(){
+  const btn=document.getElementById('msLoginBtn');
+  btn.disabled=true;
+  document.getElementById('lockErr').textContent='';
+  setLockSub('正在打开登录窗口…',true);
+  try{
+    const popup=window.open('','_blank','width=500,height=640,left=200,top=100');
+    const auth=await window.MerckAuth.loginWithPopup(popup);
+    await lookupAndGrant(auth.token);
+  }catch(e){
+    document.getElementById('lockErr').textContent='登录失败，请重试';
+    btn.disabled=false;
+    showMsBtn();
+  }
+}
+
+/* Fallback：手动员工号 */
 function verifyLock(){
   const val=document.getElementById('lockPwd').value.trim().toUpperCase();
   if(!val){
@@ -605,30 +698,44 @@ function verifyLock(){
     inp.classList.remove('shake');void inp.offsetWidth;inp.classList.add('shake');
     return;
   }
-  try{localStorage.setItem('pkg_employee','1');localStorage.setItem('pkg_emp_id',val)}catch(e){}
-  showEmpBadge(val);
-  const ls=document.getElementById('lockScreen');
-  ls.style.opacity='0';ls.style.transition='opacity .3s';
-  setTimeout(()=>{ls.remove();showHome();},320);
+  grantPortalAccess(val,null);
 }
+
 function logout(){
   if(!confirm('确认退出登录？'))return;
-  try{localStorage.removeItem('pkg_employee');localStorage.removeItem('pkg_emp_id')}catch(e){}
+  try{
+    localStorage.removeItem('pkg_employee');
+    localStorage.removeItem('pkg_emp_id');
+    localStorage.removeItem('pkg_emp_name');
+    if(window.MerckAuth)window.MerckAuth.logout();
+  }catch(e){}
   location.reload();
 }
-document.getElementById('lockPwd').addEventListener('keydown',e=>{if(e.key==='Enter')verifyLock()});
+
 function initLock(){
   try{
     const saved=localStorage.getItem('pkg_emp_id');
     if(saved&&localStorage.getItem('pkg_employee')==='1'){
       document.getElementById('lockScreen').remove();
-      showEmpBadge(saved);
-      /* init 会在 initLock() 返回后立即执行 showHome()，这里无需重复调用 */
+      showEmpBadge(saved,localStorage.getItem('pkg_emp_name')||saved);
       return;
     }
   }catch(e){}
   document.getElementById('lockScreen').style.display='flex';
-  setTimeout(()=>document.getElementById('lockPwd')?.focus(),100);
+  /* 动态加载公司 auth-client.js */
+  const sc=document.createElement('script');
+  sc.src='https://10.69.3.165:5111/auth-client.js';
+  sc.onload=async()=>{
+    if(!window.MerckAuth){showFallback();return;}
+    setLockSub('正在尝试自动登录…',true);
+    try{
+      const token=await window.MerckAuth.getToken();
+      if(token){await lookupAndGrant(token);}
+      else{showMsBtn();}
+    }catch{showMsBtn();}
+  };
+  sc.onerror=()=>showFallback();
+  document.head.appendChild(sc);
 }
 initLock();
 
